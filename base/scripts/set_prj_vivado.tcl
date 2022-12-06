@@ -32,14 +32,19 @@ set scripts [lreplace ${scripts} ${idx} ${idx}]
 
 # for example, xc7k325tffg900-2
 create_project -force ${proj} . -part ${part}
-#set obj [get_projects test]
 
-add_files -fileset sources_1 ${srcs}
-update_compile_order -fileset sources_1
+if {${srcs} ne ""} {
+  add_files -fileset sources_1 ${srcs}
+  update_compile_order -fileset sources_1
+}
 
-add_files -fileset constrs_1 ${xdcs}
+if {${xdcs} ne ""} {
+  add_files -fileset constrs_1 ${xdcs}
+}
 
-add_files -fileset utils_1 ${scripts}
+if {${scripts} ne ""} {
+  add_files -fileset utils_1 ${scripts}
+}
 
 set aup_script "scripts/allow_undefined_ports.tcl"
 if {${aup_script} in ${scripts}} {

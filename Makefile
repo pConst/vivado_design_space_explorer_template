@@ -12,7 +12,7 @@
 # - Then it compiles all projects in parallel and collects FMAX data
 #
 # - Please define var sweep range below
-# - Separate quartus project will be created and compiled for every var value
+# - Separate vivado project will be created and compiled for every var value
 #
 # - This makefile is "make -j"-friendly
 #
@@ -38,15 +38,21 @@ ${JOBS}: job%:
 	echo "\`define WIDTH $*" >> ./$*/src/define.vh; \
 	$(MAKE) -C ./$* all
 
-# TODO: Launching Vivado is inefficient here
-#       Analyze text reports instead
 fmax.csv: ${JOBS}
 	echo '# FMAX summary report for iterative compilation' > fmax.csv; \
+	echo 'var, clk1, clk2' >> fmax.csv; \
+	export BC_LINE_LENGTH=0; \
 	v=$(VAR_START);	while [ "$$v" -le $(VAR_STOP) ]; do \
-		cd $$v; \
-		vivado -mode batch -source scripts/get_fmax_vivado_special.tcl \
-			| tail -n2 | head -n1 >> ../fmax.csv; \
-		cd ..; \
+		echo $$v | xargs echo -n >> fmax.csv; \
+		echo -n ', ' >> fmax.csv; \
+		(cat ./$$v/test.runs/impl_1/main_timing_summary_routed.rpt | \
+			grep -A6 '| Intra Clock Table' | tail -n1 | gawk {'print $$2'} | \
+			xargs echo -n '1000/(1-'; echo ')') | bc | xargs echo -n >> fmax.csv; \
+		echo -n ', ' >> fmax.csv; \
+		(cat ./$$v/test.runs/impl_1/main_timing_summary_routed.rpt | \
+			grep -A7 '| Intra Clock Table' | tail -n1 | gawk {'print $$2'} | \
+			xargs echo -n '1000/(1-'; echo ')') | bc | xargs echo -n >> fmax.csv; \
+		echo >> fmax.csv; \
 		v=$$((v+1)); \
 	done
 

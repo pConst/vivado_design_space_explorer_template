@@ -6,7 +6,11 @@
 
 PROJ = test
 
-PART = xc7z020clg400-1
+# selecting largest pin count part in the family
+PART = xc7a200tffv1156-1
+
+# # selecting target part
+# PART = xc7k325tffg900-2
 
 SRCS = src/main.sv \
        src/define.vh \
